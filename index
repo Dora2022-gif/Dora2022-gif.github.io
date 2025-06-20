@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trang Khóa Học Bảo Mật</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #eee;
+      text-align: center;
+      padding: 40px;
+    }
+    iframe {
+      width: 90%;
+      height: 400px;
+      margin: 20px auto;
+      display: block;
+      pointer-events: none;
+      filter: blur(10px);
+      border: none;
+      transition: all 0.3s ease;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+    }
+    button {
+      background: #00bcd4;
+      color: white;
+      cursor: pointer;
+    }
+    .course-buttons button {
+      background: #222;
+      color: #fff;
+      margin: 5px;
+      display: none;
+    }
+    .warning {
+      color: red;
+    }
+    .user-section {
+      margin-top: 40px;
+      border-top: 1px solid #333;
+      padding-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔐 Nhập mã để mở khóa video học</h1>
+  <input type="text" id="username" placeholder="Tên đăng nhập">
+  <input type="text" id="password" placeholder="Mật khẩu truy cập">
+  <button onclick="checkPassword()">Xác nhận</button>
+  <p class="warning" id="message"></p>
+
+  <iframe id="video" src="" allow="autoplay" allowfullscreen></iframe>
+
+  <div class="course-buttons">
+    <h2>📚 Các khóa học bạn được phép xem:</h2>
+    <button id="btn1" onclick="switchVideo('VIDEO_ID_1')">Khóa học 1</button>
+    <button id="btn2" onclick="switchVideo('VIDEO_ID_2')">Khóa học 2</button>
+    <button id="btn3" onclick="switchVideo('VIDEO_ID_3')">Khóa học 3</button>
+  </div>
+
+  <div class="user-section">
+    <h3>📒 Lịch sử truy cập</h3>
+    <ul id="log"></ul>
+  </div>
+
+  <script>
+    const accessData = {
+      "user1": { pw: "123456", expires: "2025-07-01", allowed: ["btn1", "btn3"], used: false },
+      "user2": { pw: "abcxyz", expires: "2025-06-25", allowed: ["btn2"], used: false },
+      "admin": { pw: "vip999", expires: "2026-01-01", allowed: ["btn1", "btn2", "btn3"], used: false }
+    };
+
+    let videoUnlocked = false;
+
+    function checkPassword() {
+      const user = document.getElementById('username').value.trim();
+      const pw = document.getElementById('password').value.trim();
+      const now = new Date();
+      const log = document.getElementById('log');
+
+      if (!(user in accessData)) {
+        document.getElementById('message').innerText = 'Tài khoản không tồn tại!';
+        return;
+      }
+
+      const acc = accessData[user];
+      if (acc.pw !== pw) {
+        document.getElementById('message').innerText = 'Sai mật khẩu!';
+        return;
+      }
+
+      const expiry = new Date(acc.expires);
+      if (now > expiry) {
+        document.getElementById('message').innerText = 'Mã đã hết hạn!';
+        return;
+      }
+
+      if (acc.used) {
+        document.getElementById('message').innerText = 'Mã này đã được sử dụng!';
+        return;
+      }
+
+      accessData[user].used = true;
+      videoUnlocked = true;
+      document.getElementById('video').style.filter = 'none';
+      document.getElementById('video').style.pointerEvents = 'auto';
+      document.getElementById('message').innerText = '';
+
+      acc.allowed.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.style.display = 'inline-block';
+      });
+
+      const logItem = document.createElement('li');
+      logItem.innerText = `${user} đã mở khóa lúc ${now.toLocaleString()}`;
+      log.appendChild(logItem);
+    }
+
+    function switchVideo(id) {
+      if (!videoUnlocked) {
+        alert("Bạn cần nhập mã hợp lệ trước!");
+        return;
+      }
+      document.getElementById('video').src = `https://drive.google.com/file/d/${id}/preview`;
+    }
+
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.onkeydown = function(e) {
+      if (e.ctrlKey && ["u", "s", "c"].includes(e.key.toLowerCase()) ||
+          e.key === "F12" ||
+          (e.ctrlKey && e.shiftKey && ["I", "J"].includes(e.key.toUpperCase()))) {
+        return false;
+      }
+    };
+
+    window.onblur = () => {
+      alert("⚠️ Vui lòng không ghi hình màn hình!");
+    }
+  </script>
+</body>
+</html>
